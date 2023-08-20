@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "threadslapper"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [{ name = "U.N. Owen", email = "void@some.where" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "pydantic",
+  "pydantic-settings",
+  "feedparser",
+  "py-cord",
+  "urllib3",
+]
+
+[project.urls]
+Documentation = "https://github.com/unknown/threadslapper#readme"
+Issues = "https://github.com/unknown/threadslapper/issues"
+Source = "https://github.com/unknown/threadslapper"
+
+[tool.hatch.version]
+path = "src/threadslapper/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = ["coverage[toml]>=6.5", "pytest"]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11"]
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = ["black>=23.1.0", "mypy>=1.0.0", "ruff>=0.0.243"]
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src/threadslapper tests}"
+style = ["ruff {args:.}", "black --check --diff {args:.}"]
+fmt = ["black {args:.}", "ruff --fix {args:.}", "style"]
+all = ["style", "typing"]
+
+
+[tool.coverage.run]
+source_pkgs = ["threadslapper", "tests"]
+branch = true
+parallel = true
+omit = ["threadslapper/__about__.py"]
+
+[tool.coverage.paths]
+threadslapper = ["threadslapper", "*/threadslapper/src/threadslapper"]
+tests = ["tests", "*/threadslapper/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+
+
+[tool.black]
+target-version = ["py310"]
+line-length = 120
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+ignore_missing_imports = true

@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  threadslapper:
+    image: threadslapper:latest
+    build:
+      context: .
+    environment:
+      # Discord bot token
+      THREADSLAPPER_TOKEN: ${THREADSLAPPER_TOKEN:?THREADSLAPPER_TOKEN not set.}
+      # Forum channel name that this bot should create new threads in
+      THREADSLAPPER_FORUM_CHANNEL_NAME: ${THREADSLAPPER_FORUM_CHANNEL_NAME:?THREADSLAPPER_FORUM_CHANNEL_NAME not set.}
+      # RSS feed that the bot should monitor
+      THREADSLAPPER_RSS_FEED: ${THREADSLAPPER_RSS_FEED:?THREADSLAPPER_RSS_FEED not set.}
+      # Frequency in which the bot should check the RSS feed.
+      THREADSLAPPER_CHECK_INTERVAL_MIN: ${THREADSLAPPER_CHECK_INTERVAL_MIN:-5}
+    volumes:
+      - /etc/localtime:/etc/localtime
+    restart: always

@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pydantic = "*"
+pydantic-settings = "*"
+feedparser = "*"
+pycord = {version = "*", extras = ["ext"]}
+urllib3 = "*"
+py-cord = "*"
+
+[dev-packages]
+mypy = "*"
+mypy-extensions = "*"
+isort = "*"
+black = "*"
+pytest = "*"
+pytest-html = "*"
+pytest-cov = "*"
+hatch = "*"
+types-urllib3 = "*"
+
+[requires]
+python_version = "3.10"
