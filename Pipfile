@@ -10,6 +10,8 @@ feedparser = "*"
 pycord = {version = "*", extras = ["ext"]}
 urllib3 = "*"
 py-cord = "*"
+pyyaml = "*"
+markdownify = "*"
 
 [dev-packages]
 mypy = "*"
@@ -21,6 +23,7 @@ pytest-html = "*"
 pytest-cov = "*"
 hatch = "*"
 types-urllib3 = "*"
+types-pyyaml = "*"
 
 [requires]
 python_version = "3.10"

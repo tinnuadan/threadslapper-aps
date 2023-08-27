@@ -7,12 +7,20 @@ services:
     environment:
       # Discord bot token
       THREADSLAPPER_TOKEN: ${THREADSLAPPER_TOKEN:?THREADSLAPPER_TOKEN not set.}
-      # Forum channel name that this bot should create new threads in
-      THREADSLAPPER_FORUM_CHANNEL_NAME: ${THREADSLAPPER_FORUM_CHANNEL_NAME:?THREADSLAPPER_FORUM_CHANNEL_NAME not set.}
-      # RSS feed that the bot should monitor
-      THREADSLAPPER_RSS_FEED: ${THREADSLAPPER_RSS_FEED:?THREADSLAPPER_RSS_FEED not set.}
       # Frequency in which the bot should check the RSS feed.
       THREADSLAPPER_CHECK_INTERVAL_MIN: ${THREADSLAPPER_CHECK_INTERVAL_MIN:-5}
+      # Should the bot perform a latest episode check on startup?
+      THREADSLAPPER_POST_LATEST_EPISODE_CHECK: ${THREADSLAPPER_POST_LATEST_EPISODE_CHECK:-true}
+
+      # The yaml file that specifies multiple RSS feeds
+      THREADSLAPPER_CONFIG_FILE: ${THREADSLAPPER_CONFIG_FILE:-example_channels.yml}
+
+      # Alternatively, a single RSS feed + channel ID
+      # THREADSLAPPER_CHANNEL__TITLE: ${THREADSLAPPER_CHANNEL__TITLE:?THREADSLAPPER_CHANNEL__TITLE not set}
+      # THREADSLAPPER_CHANNEL__CHANNEL_ID: ${THREADSLAPPER_CHANNEL__CHANNEL_ID:?THREADSLAPPER_CHANNEL__CHANNEL_ID not set.}
+      # THREADSLAPPER_CHANNEL__RSS_FEED: ${THREADSLAPPER_CHANNEL__RSS_FEED:?THREADSLAPPER_CHANNEL__RSS_FEED not set.}
     volumes:
       - /etc/localtime:/etc/localtime
+      - $PWD/config:/opt/threadslapper/config
+      - $PWD/threadslapper_log:/var/log/threadslapper
     restart: always

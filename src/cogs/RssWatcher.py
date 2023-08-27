@@ -1,13 +1,20 @@
+"""
+RssWatcher,
+
+Watches RSS feeds for new episodes then posts a discord message/thread/post.
+"""
+
 from io import BytesIO
 
 import feedparser
 import urllib3
-from discord import Bot, ChannelType, File, ForumChannel, ForumTag, TextChannel
+from discord import Bot, ChannelType, File, ForumChannel, ForumTag, TextChannel, channel
 from discord.abc import GuildChannel
 from discord.ext import commands, tasks
+from markdownify import markdownify as md
 from pydantic import BaseModel, Field
 
-from threadslapper.settings import Settings
+from threadslapper.settings import RssFeedToChannel, Settings
 
 settings = Settings()
 log = settings.create_logger('RssWatcher')
@@ -17,110 +24,125 @@ class EpisodeData(BaseModel):
     number: int
     title: str
     description: str
-    image: bytes = Field(..., repr=False)
-    tags: list[str]
+    image: bytes | None = Field(..., repr=False)
+    tags: list[str]  # this doesn't work, ignore it for now
+
+    def get_description(self):
+        """Converts an HTML formatted document to markdown, limits text to 2000 in length"""
+        desc = md(self.description)
+        if len(desc) > 2000:
+            desc = f"{desc[:1997]}..."
+
+        return desc
+
+    def get_title(self, prefix: str = ""):
+        """
+        Appends a prefix to a title to make it clear what feed it comes from,
+        if the title of the episode does not contain an episode number, prepend
+        the episode number in the RSS feed to the episode title.
+        """
+        if self.title.startswith(f"{self.number}"):
+            return f"{prefix} {self.title}".strip()
+        return f"{prefix} {self.number}: {self.title}".strip()
 
 
 class RssWatcher(commands.Cog):
-    def __init__(self, bot, rss_feed: str, forum_channel_name: str, starting_episode_number: int = 0):
+    def __init__(self, bot: Bot):
         self.bot = bot
-        if not rss_feed:
-            raise ValueError("RSS Feed must not be empty!")
-        self.rss_feed = rss_feed
-        if not forum_channel_name:
-            raise ValueError("Forum Channel Name must not be empty!")
-        self.forum_channel_name = forum_channel_name
-        self._current_episode = starting_episode_number
+        self.feeds = settings.get_channels_list()
+
+        log.info(f'Beginning first time check of RSS feed... {", ".join([feed.title for feed in self.feeds])}')
+        if settings.post_latest_episode_check:
+            for feed in self.feeds:
+                if (latest_episode := self.check_rss(rss=feed)) is not None:
+                    log.info(f'{feed.title}: Latest episode checked on bot power on: {latest_episode.number}.')
+                else:
+                    raise RuntimeError(f"{feed.title}: No episode data found! Please check RSS Feed URL")
 
     def cog_unload(self):
         self.check_rss_feed.cancel()
 
-    def _check_for_new_episode(self) -> EpisodeData:
-        data = feedparser.parse(self.rss_feed)
+    def _get_latest_episode_data(self, rss: RssFeedToChannel) -> EpisodeData:
+        """Gets the data for the latest episode"""
+        data = feedparser.parse(rss.rss_feed)
 
         latest_episode = data.entries[0]
         http = urllib3.PoolManager()
-        img = http.request("GET", latest_episode.image.href).data
+        img = http.request("GET", latest_episode.get(rss.rss_image_key, {}).href.replace('large', 'small')).data
 
         return_data = EpisodeData(
-            number=latest_episode.itunes_episode,
-            title=latest_episode.itunes_title,
-            description=latest_episode.subtitle,
+            number=latest_episode.get(rss.rss_episode_key, 0),
+            title=latest_episode.get(rss.rss_title_key, "None"),
+            description=latest_episode.get(rss.rss_description_key, "None"),
             image=img,
-            tags=[tag.term for tag in latest_episode.tags],
+            tags=[tag.term for tag in latest_episode.get(rss.rss_tag_key, [])],
         )
 
         return return_data
 
-    def check_rss(self, episode_number_override: int | None = None) -> EpisodeData | None:
-        current_episode = episode_number_override or self._current_episode
+    def check_rss(self, rss: RssFeedToChannel, episode_number_override: int | None = None) -> EpisodeData | None:
+        """
+        If the latest episode is newer than the currently stored episode,
+        return new episode
+        """
+        current_episode = episode_number_override or rss.current_episode
 
-        new_episode = self._check_for_new_episode()
+        new_episode = self._get_latest_episode_data(rss)
 
         if new_episode.number > current_episode:
-            self._current_episode = new_episode.number
+            rss.current_episode = new_episode.number
             return new_episode
         return None
 
-    def get_this_weeks_episode_channel_id(self, channel_name: str) -> list[GuildChannel]:
-        """
-        Gets all channels matching our targetted channel name.
-
-        Should be one or none, could be more /shrug
-        """
-        channels = []
-
-        if not channel_name:
-            raise ValueError("Channel name cannot be blank!")
-
-        log.info(f"Looking for channel '{channel_name}'...")
-        for channel in self.bot.get_all_channels():
-            if channel_name in channel.name:
-                log.info(f"Found '{channel_name}' in '{channel}', (id: {channel.id}, type: {type(channel)})")
-                channels.append(channel)
-
-        return channels
-
     @tasks.loop(minutes=settings.check_interval_min)
     async def check_rss_feed(self):
+        """Actual bot loop"""
         log.info("Checking RSS feed...")
-        try:
-            new_episode = self.check_rss()
+        for feed in self.feeds:
+            if feed.enabled is False:
+                log.info(f'{feed.title}: Is disabled, skipping.')
+                continue
+            try:
+                if (new_episode := self.check_rss(rss=feed)) is not None:
+                    log.info(f"{feed.title}: New episode found: {new_episode.number}")
 
-            if new_episode:
-                log.info(f"New episode found: {new_episode.number}")
+                    channel = self.bot.get_channel(feed.channel_id)
+                    img = File(fp=BytesIO(new_episode.image), filename="thumbnail.png")
+                    title = new_episode.get_title(feed.title_prefix)
 
-                channels = self.get_this_weeks_episode_channel_id(self.forum_channel_name)
-                img = File(fp=BytesIO(new_episode.image), filename="thumbnail.png")
-                for channel in channels:
                     if isinstance(channel, TextChannel):
+                        # If the channel is a regular text channel, spawn a thread
                         message = await channel.send(
-                            content=new_episode.description,
+                            content=new_episode.get_description(),
                             file=img,
                         )
                         await channel.create_thread(
                             message=message,
-                            name=new_episode.title,
+                            name=title,
                             type=ChannelType.public_thread,
-                            reason=f"New Episode ({new_episode.number}) detected, creating thread.",
+                            reason=f"{feed.title}: New Episode ({new_episode.number}) detected, creating thread: {title}",
                         )
+
                     elif isinstance(channel, ForumChannel):
-                        await channel.create_thread(
-                            content=new_episode.description,
-                            message=message,
-                            name=new_episode.title,
-                            type=ChannelType.public_thread,
-                            file=img,
-                            tags=[ForumTag(name=tag) for tag in new_episode.tags],
-                            reason=f"New Episode ({new_episode.number}) detected, creating thread.",
-                        )
-                    log.info(f"Channel '{new_episode.title}' created!")
-            else:
-                log.info('No updates.')
-        except ValueError as e:
-            log.error(e)
+                        # If the channel is a Forum, spawn a post (that is actually a thread)
+                        if not title in [thread.name for thread in channel.threads]:
+                            new_thread = await channel.create_thread(
+                                name=title,
+                                content=new_episode.get_description(),
+                                reason=f"{feed.title}: New Episode ({new_episode.number}) detected, creating thread: {title}",
+                            )
+                            # Annoyingly I can't attach an image or remove embedded links on thread creation
+                            message = new_thread.starting_message
+                            await message.edit(file=img, suppress=True)
+                            log.info(f"{feed.title}: Channel '{new_episode.title}' created!")
+                        else:
+                            log.info(f"{feed.title}: Channel '{new_episode.title}' already exists, doing nothing.")
+                else:
+                    log.info(f'{feed.title}: No updates.')
+            except Exception as e:
+                log.error(e)
 
 
 def setup(bot: Bot):
-    rsswatcher = RssWatcher(bot, settings.rss_feed, settings.forum_channel_name)
+    rsswatcher = RssWatcher(bot)
     bot.add_cog(rsswatcher)
