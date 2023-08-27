@@ -13,7 +13,7 @@ services:
       THREADSLAPPER_POST_LATEST_EPISODE_CHECK: ${THREADSLAPPER_POST_LATEST_EPISODE_CHECK:-true}
 
       # The yaml file that specifies multiple RSS feeds
-      THREADSLAPPER_CONFIG_FILE: ${THREADSLAPPER_CONFIG_FILE:-example_channels.yml}
+      THREADSLAPPER_CONFIG_FILE: ${THREADSLAPPER_CONFIG_FILE:-example_config.yml}
 
       # Alternatively, a single RSS feed + channel ID
       # THREADSLAPPER_CHANNEL__TITLE: ${THREADSLAPPER_CHANNEL__TITLE:?THREADSLAPPER_CHANNEL__TITLE not set}
