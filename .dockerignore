@@ -8,3 +8,4 @@ Pipefile.lock
 dist
 .env
 *.log
+img

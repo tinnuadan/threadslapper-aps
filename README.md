@@ -29,6 +29,14 @@ THREADSLAPPER_CONFIG_FILE=config.yml
 
 ## Setting a watch on an RSS Feed
 
+### Note on `channel_id` variable
+
+`channel_id` refers to copying the channel ID from discord
+
+![copy discord channel id](img/copy_channel_id.png)
+
+If you do not see this menu option, you will need to enable developer settings on your discord client.
+
 ### Single RSS feed
 
 For a single RSS feed, you can specify the following environment variables in the docker-compose file and associated `.env`:
