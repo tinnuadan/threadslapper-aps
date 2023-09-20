@@ -16,11 +16,11 @@ fosspod:
   rss_title_key: itunes_title
   rss_description_key: summary
   rss_image_key: image
-nextlander:
-  enabled: false
-  channel_id: 849384215983554603
-  rss_url: https://www.omnycontent.com/d/playlist/77bedd50-a734-42aa-9c08-ad86013ca0f9/2b6eadde-60d3-45b4-aac8-ae04014687dd/6554b463-2d55-4d17-a6c1-ae04014687f0/podcast.rss
-  rss_episode_key: itunes_episode
-  rss_title_key: title
-  rss_description_key: summary
-  rss_image_key: image
+#nextlander:
+#  enabled: false
+#  channel_id: 849384215983554603
+#  rss_url: https://www.omnycontent.com/d/playlist/77bedd50-a734-42aa-9c08-ad86013ca0f9/2b6eadde-60d3-45b4-aac8-ae04014687dd/6554b463-2d55-4d17-a6c1-ae04014687f0/podcast.rss
+#  rss_episode_key: itunes_episode
+#  rss_title_key: title
+#  rss_description_key: summary
+#  rss_image_key: image
