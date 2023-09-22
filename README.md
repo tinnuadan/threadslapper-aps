@@ -6,16 +6,19 @@ Monitors multiple RSS feeds for new episodes. If a new episode is posted it will
 
 1. Create a new bot in <https://discord.com/developers/applications>
 2. In the new bot's settings on the developer portal, go to the `Bot` tab, and get a token (click `Reset Token`), and save this to a file on your local machine.
-3. In the new bot's `Oauth2` tab, click `URL Generator` and create a new URL with the `Bot` scopes:
-    - `Read Messages/View Channels`
-    - `Send Messages`
-    - `Create Public Threads`
-    - `Create Private Threads`
-    - `Embed Links`
-    - `Attach Files`
-    - `Send Messages in Threads`
-    - `Manage Threads`
-4. Open the generated URL and add the bot to the desired server (ex: `Brad & Will Made a Tech Pod`).
+3. In the new bot's `Oauth2` tab, click `URL Generator`, choose `Bot` within the `Scopes` section, and then select the following scopes in the `Bot Permissions` section that appears:
+    - General Permissions
+      - `Read Messages/View Channels`
+    - Text Permissions
+      - `Send Messages`
+      - `Create Public Threads`
+      - `Create Private Threads`
+      - `Send Messages in Threads`
+      - `Manage Threads`
+      - `Embed Links`
+      - `Attach Files`
+    
+4. Open the generated URL in a browser and add the bot to the desired server (ex: `Brad & Will Made a Tech Pod`).
 
 ## Setting up docker container
 
@@ -34,11 +37,11 @@ THREADSLAPPER_CONFIG_FILE=config.yml
 
 ### Note on `channel_id` variable
 
-`channel_id` refers to copying the channel ID from discord
+`channel_id` is used in the following sections and refers to copying the channel ID from discord.
 
 ![copy discord channel id](img/copy_channel_id.png)
 
-If you do not see this menu option, you will need to enable developer settings on your discord client.
+If you do not see this menu option, you will need to enable Developer Mode in your discord client. This can be toggled in the settings within the `Advanced` section.
 
 ### Single RSS feed
 
