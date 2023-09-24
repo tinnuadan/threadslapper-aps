@@ -52,7 +52,7 @@ class RssWatcher(commands.Cog):
         self.feeds = settings.get_channels_list()
 
         log.info(f'Beginning first time check of RSS feed... {", ".join([feed.title for feed in self.feeds])}')
-        if settings.post_latest_episode_check:
+        if settings.startup_latest_episode_check:
             for feed in self.feeds:
                 if (latest_episode := self.check_rss(rss=feed)) is not None:
                     log.info(f'{feed.title}: Latest episode checked on bot power on: {latest_episode.number}.')
@@ -67,11 +67,23 @@ class RssWatcher(commands.Cog):
         data = feedparser.parse(rss.rss_feed)
 
         latest_episode = data.entries[0]
-        http = urllib3.PoolManager()
-        img = http.request("GET", latest_episode.get(rss.rss_image_key, {}).href.replace('large', 'small')).data
+
+        img = None
+        if rss.rss_image_key:
+            try:
+                http = urllib3.PoolManager()
+                img = http.request("GET", latest_episode.get(rss.rss_image_key, {}).href.replace('large', 'small')).data
+            except:
+                log.debug(
+                    f"Could not download episode for {rss.title} ep {latest_episode.get(rss.rss_episode_key, 0)} image, skipping"
+                )
+
+        latest_ep_id = latest_episode.get(rss.rss_episode_key, 0)
+        if rss.override_episode_numbers:
+            latest_ep_id = len(data.entries)
 
         return_data = EpisodeData(
-            number=latest_episode.get(rss.rss_episode_key, 0),
+            number=latest_ep_id,
             title=latest_episode.get(rss.rss_title_key, "None"),
             description=latest_episode.get(rss.rss_description_key, "None"),
             image=img,
@@ -107,21 +119,26 @@ class RssWatcher(commands.Cog):
                     log.info(f"{feed.title}: New episode found: {new_episode.number}")
 
                     channel = self.bot.get_channel(feed.channel_id)
-                    img = File(fp=BytesIO(new_episode.image), filename="thumbnail.png")
+                    img = None
+                    if new_episode.image:
+                        img = File(fp=BytesIO(new_episode.image), filename="thumbnail.png")
                     title = new_episode.get_title(feed.title_prefix)
 
                     if isinstance(channel, TextChannel):
-                        # If the channel is a regular text channel, spawn a thread
-                        message = await channel.send(
-                            content=new_episode.get_description(),
-                            file=img,
-                        )
-                        await channel.create_thread(
-                            message=message,
-                            name=title,
-                            type=ChannelType.public_thread,
-                            reason=f"{feed.title}: New Episode ({new_episode.number}) detected, creating thread: {title}",
-                        )
+                        if not title in [thread.name for thread in channel.threads]:
+                            # If the channel is a regular text channel, spawn a thread
+                            message = await channel.send(
+                                content=new_episode.get_description(),
+                                file=img,
+                            )
+                            await channel.create_thread(
+                                message=message,
+                                name=title,
+                                type=ChannelType.public_thread,
+                                reason=f"{feed.title}: New Episode ({new_episode.number}) detected, creating thread: {title}",
+                            )
+                        else:
+                            log.info(f"{feed.title}: Thread '{title}' already exists, doing nothing.")
 
                     elif isinstance(channel, ForumChannel):
                         # If the channel is a Forum, spawn a post (that is actually a thread)
@@ -131,12 +148,13 @@ class RssWatcher(commands.Cog):
                                 content=new_episode.get_description(),
                                 reason=f"{feed.title}: New Episode ({new_episode.number}) detected, creating thread: {title}",
                             )
-                            # Annoyingly I can't attach an image or remove embedded links on thread creation
-                            message = new_thread.starting_message
-                            await message.edit(file=img, suppress=True)
-                            log.info(f"{feed.title}: Channel '{new_episode.title}' created!")
+                            if img:
+                                # Annoyingly I can't attach an image or remove embedded links on thread creation
+                                message = new_thread.starting_message
+                                await message.edit(file=img, suppress=True)
+                            log.info(f"{feed.title}: Channel '{title}' created!")
                         else:
-                            log.info(f"{feed.title}: Channel '{new_episode.title}' already exists, doing nothing.")
+                            log.info(f"{feed.title}: Channel '{title}' already exists, doing nothing.")
                 else:
                     log.info(f'{feed.title}: No updates.')
             except Exception as e:

@@ -17,7 +17,7 @@ Monitors multiple RSS feeds for new episodes. If a new episode is posted it will
       - `Manage Threads`
       - `Embed Links`
       - `Attach Files`
-    
+
 4. Open the generated URL in a browser and add the bot to the desired server (ex: `Brad & Will Made a Tech Pod`).
 
 ## Setting up docker container
@@ -29,7 +29,7 @@ An example would be:
 ```properties
 THREADSLAPPER_TOKEN=BOT_TOKEN_FROM_DISCORD
 THREADSLAPPER_CHECK_INTERVAL_MIN=5
-THREADSLAPPER_POST_LATEST_EPISODE_CHECK=true
+THREADSLAPPER_STARTUP_LATEST_EPISODE_CHECK=true
 THREADSLAPPER_CONFIG_FILE=config.yml
 ```
 
@@ -53,6 +53,9 @@ THREADSLAPPER_CHANNEL__TITLE: example feed title
 THREADSLAPPER_CHANNEL__TITLE_PREFIX: The prefix to attach to forum posts
 THREADSLAPPER_CHANNEL__CHANNEL_ID: discord channel ID
 THREADSLAPPER_CHANNEL__RSS_FEED: url_to_rss_feed
+# If using the patreon RSS feed, it operates on GUID values. Use this to reference
+# the number of episodes in the RSS feed itself.
+THREADSLAPPER_CHANNEL__OVERRIDE_EPISODE_NUMBERS: false
 
 # If your RSS feed's XML configuration differs from these keys, set them.
 THREADSLAPPER_CHANNEL__RSS_EPISODE_KEY: itunes_episode

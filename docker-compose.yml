@@ -10,7 +10,7 @@ services:
       # Frequency in which the bot should check the RSS feed.
       THREADSLAPPER_CHECK_INTERVAL_MIN: ${THREADSLAPPER_CHECK_INTERVAL_MIN:-5}
       # Should the bot perform a latest episode check on startup?
-      THREADSLAPPER_POST_LATEST_EPISODE_CHECK: ${THREADSLAPPER_POST_LATEST_EPISODE_CHECK:-true}
+      THREADSLAPPER_STARTUP_LATEST_EPISODE_CHECK: ${THREADSLAPPER_STARTUP_LATEST_EPISODE_CHECK:-true}
 
       # The yaml file that specifies multiple RSS feeds
       THREADSLAPPER_CONFIG_FILE: ${THREADSLAPPER_CONFIG_FILE:-example_config.yml}
