@@ -1,5 +1,7 @@
+from discord import Bot, Intents
 from discord.ext import commands
 
+from .__about__ import __version__
 from .settings import Settings
 
 settings = Settings()
@@ -10,14 +12,23 @@ cogs_list = [
     'RssWatcher',
 ]
 
-bot = commands.Bot()
+bot = Bot(intents=Intents(members=True, guilds=True, message_content=True, messages=True, guild_messages=True))
 for cog in cogs_list:
     bot.load_extension(f'cogs.{cog}')
 
 
 @bot.event
 async def on_ready():
-    log.info("Bot starting.")
+    log.info(
+        "\n".join(
+            [
+                "\n",
+                "=" * 80,
+                f"\tBot starting. Version {__version__}",
+                "=" * 80,
+            ]
+        )
+    )
 
     try:
         rsswatcher = bot.get_cog('RssWatcher')
