@@ -23,4 +23,6 @@ services:
       - /etc/localtime:/etc/localtime
       - $PWD/config:/opt/threadslapper/config
       - $PWD/threadslapper_log:/var/log/threadslapper
+    labels:
+      - "traefik.enable=false"
     restart: always
