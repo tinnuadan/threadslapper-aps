@@ -1,26 +1,55 @@
----
 techpod:
   enabled: true
   channel_id: 1140732303849570541
+  # subscriber_role_id: 1158149418252509184
+  announce_channel_id: 626461718670737418
   rss_url: https://feeds.simplecast.com/qKIEAGzn
   rss_episode_key: itunes_episode
   rss_title_key: itunes_title
   rss_description_key: summary
   rss_image_key: image
+
+  color_theme_r: 101
+  color_theme_g: 7
+  color_theme_b: 118
+  rss_channel_title_key: title
+  rss_channel_url_key: link
+  rss_channel_image_key: image
+  rss_channel_last_published_key: published
 fosspod:
   enabled: true
   title_prefix: FOSSPOD
   channel_id: 1140732303849570541
+  # subscriber_role_id: 1158149418252509184
+  announce_channel_id: 626461718670737418
   rss_url: https://feeds.simplecast.com/5JzYp_Kp
   rss_episode_key: itunes_episode
+  rss_episode_url_key: itunes_episode
   rss_title_key: itunes_title
   rss_description_key: summary
   rss_image_key: image
-#nextlander:
-#  enabled: false
-#  channel_id: 849384215983554603
-#  rss_url: https://www.omnycontent.com/d/playlist/77bedd50-a734-42aa-9c08-ad86013ca0f9/2b6eadde-60d3-45b4-aac8-ae04014687dd/6554b463-2d55-4d17-a6c1-ae04014687f0/podcast.rss
-#  rss_episode_key: itunes_episode
-#  rss_title_key: title
-#  rss_description_key: summary
-#  rss_image_key: image
+
+  color_theme_r: 0
+  color_theme_g: 48
+  color_theme_b: 86
+  rss_channel_title_key: title
+  rss_channel_url_key: link
+  rss_channel_image_key: image
+  rss_channel_last_published_key: published
+nextlander:
+  enabled: false
+  channel_id: 849384215983554603
+  announce_channel_id: 849002500161273917
+  rss_url: https://www.omnycontent.com/d/playlist/77bedd50-a734-42aa-9c08-ad86013ca0f9/2b6eadde-60d3-45b4-aac8-ae04014687dd/6554b463-2d55-4d17-a6c1-ae04014687f0/podcast.rss
+  rss_episode_key: itunes_episode
+  rss_title_key: title
+  rss_description_key: summary
+  rss_image_key: image
+
+  color_theme_r: 17
+  color_theme_g: 71
+  color_theme_b: 152
+  rss_channel_title_key: title
+  rss_channel_url_key: link
+  rss_channel_image_key: image
+  rss_channel_last_published_key: published
