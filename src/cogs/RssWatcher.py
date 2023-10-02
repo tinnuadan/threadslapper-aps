@@ -215,11 +215,11 @@ class RssWatcher(commands.Cog):
         if not feed.announce_channel_id:
             return None
 
+        announce_message = f":thread: :clap:\n# {announcement}\n\n# Discuss here! {message.jump_url}\n\n"
+
         if (announcement_channel := self.bot.get_channel(feed.announce_channel_id)) is not None:
             if isinstance(announcement_channel, TextChannel):
-                announce_message = f":thread: :clap:\n# {announcement}\n\n# Discuss here! {message.jump_url}\n\n"
-                if (last_announcement_id := announcement_channel.last_message_id) is not None:
-                    last_announcement_message = await announcement_channel.fetch_message(last_announcement_id)
+                if (last_announcement_message := announcement_channel.last_message) is not None:
                     if announce_message != last_announcement_message.content:
                         log.info(f"{feed.title}: Sending announcement message to {announcement_channel.name}")
                         _announcement = await announcement_channel.send(
