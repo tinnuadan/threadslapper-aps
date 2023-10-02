@@ -12,6 +12,7 @@ urllib3 = "*"
 py-cord = "*"
 pyyaml = "*"
 markdownify = "*"
+pydantic-extra-types = "*"
 
 [dev-packages]
 mypy = "*"
