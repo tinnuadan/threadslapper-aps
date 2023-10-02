@@ -301,7 +301,8 @@ class RssWatcher(commands.Cog):
                 else:
                     log.info(f'{feed.title}: No updates.')
             except Exception as e:
-                log.error(e)
+                log.critical(e)
+                log.error(e.with_traceback)
 
 
 def setup(bot: Bot):
