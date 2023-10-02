@@ -155,7 +155,7 @@ class RssWatcher(commands.Cog):
             await new_thread.join()
             if (first_msg_in_thread := new_thread.starting_message) is not None:
                 await first_msg_in_thread.pin()
-            await new_thread.send(content=":thread: :clap:")
+            # await new_thread.send(content=":thread: :clap:")
 
             log.info(f"{feed.title}: Thread '{title}' created!")
             return new_thread
@@ -190,7 +190,7 @@ class RssWatcher(commands.Cog):
                 await message.publish()
             if (first_msg_in_thread := new_thread.starting_message) is not None:
                 await first_msg_in_thread.pin()
-                await new_thread.send(content=":thread: :clap:", reference=first_msg_in_thread)
+                # await new_thread.send(content=":thread: :clap:", reference=first_msg_in_thread)
 
             log.info(f"{feed.title}: Channel '{title}' created!")
             return new_thread
