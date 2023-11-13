@@ -92,6 +92,7 @@ THREADSLAPPER_CHANNEL__RSS_CHANNEL_TITLE_KEY: title
 THREADSLAPPER_CHANNEL__RSS_CHANNEL_URL_KEY: link
 THREADSLAPPER_CHANNEL__RSS_CHANNEL_IMAGE_KEY: image
 THREADSLAPPER_CHANNEL__RSS_CHANNEL_LAST_PUBLISHED_KEY: published
+THREADSLAPPER_CHANNEL__RSS_FEED_IS_BACKWARDS: false  # Set this to true if the latest episode gets appended to the end of the list instead of at the beginning of the list.
 ```
 
 ### Multiple RSS feeds
@@ -129,6 +130,8 @@ techpod:
   rss_channel_url_key: link
   rss_channel_image_key: image
   rss_channel_last_published_key: published
+
+  rss_feed_is_backwards: false  # Set this to true if the latest episode gets appended to the end of the list instead of at the beginning of the list.
 fosspod:
   enabled: false
   title_prefix: FOSSPOD

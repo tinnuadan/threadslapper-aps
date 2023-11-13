@@ -14,13 +14,13 @@ services:
 
       # The yaml file that specifies multiple RSS feeds
       THREADSLAPPER_CONFIG_FILE: ${THREADSLAPPER_CONFIG_FILE:-example_config.yml}
-
       # Alternatively, a single RSS feed + channel ID
       # THREADSLAPPER_CHANNEL__TITLE: ${THREADSLAPPER_CHANNEL__TITLE:?THREADSLAPPER_CHANNEL__TITLE not set}
       # THREADSLAPPER_CHANNEL__CHANNEL_ID: ${THREADSLAPPER_CHANNEL__CHANNEL_ID:?THREADSLAPPER_CHANNEL__CHANNEL_ID not set.}
       # THREADSLAPPER_CHANNEL__RSS_FEED: ${THREADSLAPPER_CHANNEL__RSS_FEED:?THREADSLAPPER_CHANNEL__RSS_FEED not set.}
     volumes:
-      - /etc/localtime:/etc/localtime
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
       - $PWD/config:/opt/threadslapper/config
       - $PWD/threadslapper_log:/var/log/threadslapper
     labels:

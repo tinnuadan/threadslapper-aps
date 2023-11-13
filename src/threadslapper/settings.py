@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 import sys
 from typing import Annotated, Any, Tuple
@@ -52,9 +53,12 @@ def validate_channel_id(v: int) -> int:
 def validate_color(v: int) -> int:
     return max(min(255, v), 0)
 
+def validate_nonnegative(v: int) -> int:
+    return abs(v)
 
 class RssFeedToChannel(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
+    _error_count: Annotated[int, AfterValidator(validate_nonnegative)] = 0  # this is set by the script
 
     enabled: Annotated[bool, BeforeValidator(prevalidate_boolean)] = True
     title_prefix: Annotated[str, AfterValidator(validate_string)] = ""
@@ -85,9 +89,17 @@ class RssFeedToChannel(BaseModel):
     override_episode_check: Annotated[bool, BeforeValidator(prevalidate_boolean)] = False
     override_episode_prepend_title: Annotated[bool, BeforeValidator(prevalidate_boolean)] = False
     current_episode: int = 0
+    rss_feed_is_backwards: Annotated[bool, BeforeValidator(prevalidate_boolean)] = False
 
     def get_color_theme(self) -> Tuple[int, int, int]:
         return (self.color_theme_r, self.color_theme_g, self.color_theme_b)
+
+    def get_latest_episode_index_position(self) -> int:
+        """
+        Gets the index where the latest episode is, this is either -1
+        (end of the rss feed) or 0 (beginning of the RSS feed)
+        """
+        return -1 * int(self.rss_feed_is_backwards)
 
 
 class Settings(BaseSettings):
@@ -103,6 +115,9 @@ class Settings(BaseSettings):
     config_path: Annotated[str, AfterValidator(validate_string)] = "config/"
     config_file: Annotated[str, AfterValidator(validate_string)] = "example_config.yml"
     startup_latest_episode_check: bool = True  # check for latest episodes on power on
+
+    # how many errors does it take to disable an individiual feed?
+    error_count_disable: Annotated[int, AfterValidator(validate_nonnegative)] = 3
 
     # A single RSS feed can be defined, or a list of yaml objects
     channel: RssFeedToChannel | None = None
@@ -120,11 +135,31 @@ class Settings(BaseSettings):
         stdout = logging.StreamHandler(sys.stdout)
         stdout.level = logging.INFO
         stdout.setFormatter(formatter)
-        file = logging.FileHandler(os.path.join(self.log_path, 'discordbot.log'))
+        file = TimedRotatingFileHandler(
+            filename=os.path.join(self.log_path, f'discordbot.log'),
+            when='W0',
+            backupCount=10,
+            )
         file.level = logging.INFO
         file.setFormatter(formatter)
+        fileDebug = TimedRotatingFileHandler(
+            filename=os.path.join(self.log_path, f'discordbot_debug.log'),
+            when='W0',
+            backupCount=10,
+            )
+        fileDebug.level = logging.DEBUG
+        fileDebug.setFormatter(formatter)
+        fileError = TimedRotatingFileHandler(
+            filename=os.path.join(self.log_path, f'discordbot_errors.log'),
+            when='W0',
+            backupCount=10,
+            )
+        fileError.level = logging.ERROR
+        fileError.setFormatter(formatter)
         log.addHandler(stdout)
         log.addHandler(file)
+        log.addHandler(fileDebug)
+        log.addHandler(fileError)
 
         return log
 
@@ -182,6 +217,9 @@ class Settings(BaseSettings):
                     rss.color_theme_g = rss_key
                 if (rss_key := value.get('color_theme_b', None)) is not None:
                     rss.color_theme_b = rss_key
+
+                if (rss_key := value.get('rss_feed_is_backwards', None)) is not None:
+                    rss.rss_feed_is_backwards = rss_key
 
                 feeds.append(rss)
         except Exception as e:

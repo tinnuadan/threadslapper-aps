@@ -111,7 +111,7 @@ class RssWatcher(commands.Cog):
         data = feedparser.parse(rss.rss_feed)
 
         channel_info = data.feed
-        latest_episode = data.entries[0]
+        latest_episode = data.entries[rss.get_latest_episode_index_position()]
 
         latest_ep_id = latest_episode.get(rss.rss_episode_key, 0)
         if rss.override_episode_numbers:
@@ -252,11 +252,15 @@ class RssWatcher(commands.Cog):
     @tasks.loop(minutes=settings.check_interval_min)
     async def check_rss_feed(self):
         """Actual bot loop"""
-        log.info("Checking RSS feed...")
+        log.debug("Checking RSS feed...")
         for feed in self.feeds:
-            if feed.enabled is False:
-                log.info(f'{feed.title}: Is disabled, skipping.')
+            if feed.error_count > settings.error_count_disable:
+                log.warning(f'{feed.title} has exceeded error count, skipping. To clear this counter restart the service.')
                 continue
+            if feed.enabled is False:
+                log.debug(f'{feed.title}: Is disabled, skipping.')
+                continue
+
             try:
                 if (latest_episode := self.check_rss(rss=feed)) is not None:
                     log.info(f"{feed.title}: New episode found: {latest_episode.number}")
@@ -299,10 +303,11 @@ class RssWatcher(commands.Cog):
                                     await thread.add_user(member)
 
                 else:
-                    log.info(f'{feed.title}: No updates.')
+                    log.debug(f'{feed.title}: No updates.')
             except Exception as e:
-                log.critical(e)
-                log.error(e.with_traceback)
+                feed.error_count += 1
+                log.critical(f'{feed.title}: {e}')
+                log.error(f'{feed.title}: {e.with_traceback()}')
 
 
 def setup(bot: Bot):
