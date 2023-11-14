@@ -1,7 +1,7 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import os
 import sys
+from logging.handlers import TimedRotatingFileHandler
 from typing import Annotated, Any, Tuple
 
 import yaml
@@ -58,7 +58,7 @@ def validate_nonnegative(v: int) -> int:
 
 class RssFeedToChannel(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
-    _error_count: Annotated[int, AfterValidator(validate_nonnegative)] = 0  # this is set by the script
+    error_count: Annotated[int, AfterValidator(validate_nonnegative)] = 0  # this is set by the script
 
     enabled: Annotated[bool, BeforeValidator(prevalidate_boolean)] = True
     title_prefix: Annotated[str, AfterValidator(validate_string)] = ""

@@ -13,7 +13,11 @@
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
     "isort.importStrategy": "fromEnvironment",
+    "isort.check": true,
     "mypy.enabled": true,
+    "mypy.targets": [
+        "src"
+    ],
     "mypy.runUsingActiveInterpreter": true,
     "python.analysis.autoFormatStrings": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
