@@ -127,34 +127,34 @@ class Settings(BaseSettings):
 
     def create_logger(self, name: str) -> logging.Logger:
         log = logging.getLogger(name)
-        log.setLevel(logging.INFO)
+        log.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
             '%(asctime)s - [%(levelname)s] [ln: %(lineno)d] (%(process)d) - %(message)s',
             "%Y-%m-%d %H:%M:%S %z",
         )
         stdout = logging.StreamHandler(sys.stdout)
-        stdout.level = logging.INFO
+        stdout.setLevel(logging.INFO)
         stdout.setFormatter(formatter)
         file = TimedRotatingFileHandler(
             filename=os.path.join(self.log_path, f'discordbot.log'),
             when='W0',
             backupCount=10,
             )
-        file.level = logging.INFO
+        file.setLevel(logging.INFO)
         file.setFormatter(formatter)
         fileDebug = TimedRotatingFileHandler(
             filename=os.path.join(self.log_path, f'discordbot_debug.log'),
             when='W0',
             backupCount=10,
             )
-        fileDebug.level = logging.DEBUG
+        fileDebug.setLevel(logging.DEBUG)
         fileDebug.setFormatter(formatter)
         fileError = TimedRotatingFileHandler(
             filename=os.path.join(self.log_path, f'discordbot_errors.log'),
             when='W0',
             backupCount=10,
             )
-        fileError.level = logging.ERROR
+        fileError.setLevel(logging.ERROR)
         fileError.setFormatter(formatter)
         log.addHandler(stdout)
         log.addHandler(file)
