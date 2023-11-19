@@ -53,8 +53,19 @@ def validate_channel_id(v: int) -> int:
 def validate_color(v: int) -> int:
     return max(min(255, v), 0)
 
+
 def validate_nonnegative(v: int) -> int:
     return abs(v)
+
+
+def prevalidate_blank_string(v: Any) -> int | None:
+    if isinstance(v, str):
+        if v.isnumeric():
+            return int(v)
+    if isinstance(v, int):
+        return v
+    return None
+
 
 class RssFeedToChannel(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -99,7 +110,9 @@ class RssFeedToChannel(BaseModel):
         Gets the index where the latest episode is, this is either -1
         (end of the rss feed) or 0 (beginning of the RSS feed)
         """
-        return -1 * int(self.rss_feed_is_backwards)
+        if self.rss_feed_is_backwards:
+            return -1
+        return 0
 
 
 class Settings(BaseSettings):
@@ -123,6 +136,13 @@ class Settings(BaseSettings):
     channel: RssFeedToChannel | None = None
     channels_file: str | None = None
 
+    override_announce_channel_id: Annotated[
+        Annotated[int, AfterValidator(validate_channel_id)] | None, BeforeValidator(prevalidate_blank_string)
+    ] = None
+    override_channel_id: Annotated[
+        Annotated[int, AfterValidator(validate_channel_id)] | None, BeforeValidator(prevalidate_blank_string)
+    ] = None
+
     debug: Annotated[bool, BeforeValidator(prevalidate_boolean)] = False
 
     def create_logger(self, name: str) -> logging.Logger:
@@ -139,22 +159,22 @@ class Settings(BaseSettings):
             filename=os.path.join(self.log_path, f'discordbot.log'),
             when='W0',
             backupCount=10,
-            )
+        )
         file.setLevel(logging.INFO)
         file.setFormatter(formatter)
         fileDebug = TimedRotatingFileHandler(
             filename=os.path.join(self.log_path, f'discordbot_debug.log'),
             when='W0',
             backupCount=10,
-            )
+        )
         fileDebug.setLevel(logging.DEBUG)
         fileDebug.setFormatter(formatter)
         fileError = TimedRotatingFileHandler(
             filename=os.path.join(self.log_path, f'discordbot_errors.log'),
             when='W0',
             backupCount=10,
-            )
-        fileError.setLevel(logging.ERROR)
+        )
+        fileError.setLevel(logging.WARNING)
         fileError.setFormatter(formatter)
         log.addHandler(stdout)
         log.addHandler(file)

@@ -40,6 +40,16 @@ THREADSLAPPER_STARTUP_LATEST_EPISODE_CHECK=true
 THREADSLAPPER_CONFIG_FILE=config.yml
 ```
 
+Additionally, and mostly for testing purposes, it may be handy to force all monitored RSS feeds to the same channel. To do so populate the following with the channel ID of your choice:
+
+```properties
+# override all channel_id's and announce_channel_id's configured per feed.
+THREADSLAPPER_OVERRIDE_CHANNEL_ID=1234567890
+THREADSLAPPER_OVERRIDE_ANNOUNCE_CHANNEL_ID=1234567890
+```
+
+As well as uncomment the relevant keys in the `docker-compose.yml` file.
+
 ## Setting a watch on an RSS Feed
 
 ### Note on `channel_id` variable

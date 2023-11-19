@@ -212,28 +212,36 @@ class RssWatcher(commands.Cog):
         """
         Post an announcement with a truncated Embed object as well as a link to the thread.
         """
-        if not feed.announce_channel_id:
+        # Override the announce channel id if necessary
+        _announce_channel_id = feed.announce_channel_id
+        if settings.override_announce_channel_id:
+            _announce_channel_id = settings.override_announce_channel_id
+        # return if there is no announcement channel
+        if not _announce_channel_id:
             return None
 
-        announce_message = f":thread: :clap:\n# {announcement}\n\n# Discuss here! {message.jump_url}\n\n"
+        announce_title = f":thread: :clap:\n# {announcement}\n\n# Discuss here!"
+        announce_message = f"{announce_title} {message.jump_url}\n\n"
 
-        if (announcement_channel := self.bot.get_channel(feed.announce_channel_id)) is not None:
+        if (announcement_channel := self.bot.get_channel(_announce_channel_id)) is not None:
             if isinstance(announcement_channel, TextChannel):
-                if (last_announcement_message := announcement_channel.last_message) is not None:
-                    if announce_message != last_announcement_message.content:
-                        log.info(f"{feed.title}: Sending announcement message to {announcement_channel.name}")
-                        _announcement = await announcement_channel.send(
-                            content=announce_message, embed=self.get_embed(feed, latest_episode, truncate=True)
-                        )
-                        # await _announcement.publish()
-                    else:
-                        log.info(f"{feed.title}: Announcement message already exists, skipping.")
-                else:
-                    log.info(f"{feed.title}: Sending announcement message to {announcement_channel.name}")
-                    _announcement = await announcement_channel.send(
-                        content=announce_message, embed=self.get_embed(feed, latest_episode, truncate=True)
-                    )
-                    # await _announcement.publish()
+                last_message_id = announcement_channel.last_message_id
+                if last_message_id:
+                    last_announcement_message = await announcement_channel.fetch_message(last_message_id)
+                    if last_announcement_message:
+                        if announce_title in last_announcement_message.content:
+                            log.info(f"{feed.title}: Announcement message already exists, skipping.")
+                            return
+
+                log.info(f"{feed.title}: Sending announcement message to {announcement_channel.name}")
+                _announcement = await announcement_channel.send(
+                    content=announce_message, embed=self.get_embed(feed, latest_episode, truncate=True)
+                )
+                # await _announcement.publish()
+            else:
+                log.warning(f"{feed.title}: Configured announcement channel is not a TextChannel")
+        else:
+            log.warning(f"{feed.title}: Configured announcement channel does not exist!")
 
     def check_rss(self, rss: RssFeedToChannel, episode_number_override: int | None = None) -> EpisodeData | None:
         """
@@ -255,7 +263,9 @@ class RssWatcher(commands.Cog):
         log.debug("Checking RSS feed...")
         for feed in self.feeds:
             if feed.error_count > settings.error_count_disable:
-                log.warning(f'{feed.title} has exceeded error count, skipping. To clear this counter restart the service.')
+                log.warning(
+                    f'{feed.title} has exceeded error count, skipping. To clear this counter restart the service.'
+                )
                 continue
             if feed.enabled is False:
                 log.debug(f'{feed.title}: Is disabled, skipping.')
@@ -265,7 +275,12 @@ class RssWatcher(commands.Cog):
                 if (latest_episode := self.check_rss(rss=feed)) is not None:
                     log.info(f"{feed.title}: New episode found: {latest_episode.number}")
 
-                    channel = self.bot.get_channel(feed.channel_id)
+                    # override the channel id if necessary
+                    _channel_id = feed.channel_id
+                    if settings.override_channel_id:
+                        _channel_id = settings.override_channel_id
+
+                    channel = self.bot.get_channel(_channel_id)
                     # img = None
                     thread = None
                     # if latest_episode.image:
