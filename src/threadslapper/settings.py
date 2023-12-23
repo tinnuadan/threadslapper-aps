@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from typing import Annotated, Any, Tuple
+from typing import Annotated, Any, Iterator, Tuple
 
 import yaml
 from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, SecretStr
@@ -76,7 +76,8 @@ class RssFeedToChannel(BaseModel):
     title: Annotated[str, AfterValidator(validate_string)] = "default"
     channel_id: Annotated[int, AfterValidator(validate_channel_id)] = -1
     subscriber_role_id: int | None = None
-    announce_channel_id: Annotated[int, AfterValidator(validate_channel_id)] | None = None
+    announce_channel_id: Annotated[int, AfterValidator(validate_channel_id)] = -1
+    hybrid_channel_list: list[tuple[int, int]] = []
     rss_feed: Annotated[str, AfterValidator(validate_string), AfterValidator(validate_rss_feed)] = ""
     color_theme_r: Annotated[int, AfterValidator(validate_color)] = 0
     color_theme_g: Annotated[int, AfterValidator(validate_color)] = 0
@@ -113,6 +114,19 @@ class RssFeedToChannel(BaseModel):
         if self.rss_feed_is_backwards:
             return -1
         return 0
+
+    def get_channels(
+        self,
+        override_announce_channel_id: int | None = None,
+        override_channel_id: int | None = None,
+    ) -> Iterator[Tuple[int, int]]:
+        if override_announce_channel_id or override_channel_id:
+            yield (override_announce_channel_id or -1, override_channel_id or -1)
+        elif self.hybrid_channel_list:
+            for channel in self.hybrid_channel_list:
+                yield (channel[0], channel[1])
+        else:
+            yield (self.announce_channel_id, self.channel_id)
 
 
 class Settings(BaseSettings):
@@ -203,14 +217,24 @@ class Settings(BaseSettings):
                     enabled=value.get('enabled', True),
                     title=key,
                     title_prefix=value.get('title_prefix', ''),
-                    channel_id=value.get('channel_id', -1),
                     subscriber_role_id=value.get('subscriber_role_id', None),
-                    announce_channel_id=value.get('announce_channel_id', None),
                     rss_feed=value.get('rss_url', ''),
                     override_episode_numbers=value.get('override_episode_numbers', False),
                     override_episode_check=value.get('override_episode_check', False),
                     override_episode_prepend_title=value.get('override_episode_prepend_title', False),
                 )
+
+                channel = value.get('channel_id', -1)
+                announce_channel = value.get('announce_channel_id', None)
+                rss.announce_channel_id = announce_channel
+
+                if isinstance(channel, int):
+                    rss.channel_id = channel
+                elif isinstance(channel, list):
+                    rss.hybrid_channel_list = [
+                        (pair.get('channel', None), pair.get('announce_channel', None)) for pair in channel
+                    ]
+
                 if (rss_key := value.get('rss_episode_key', None)) is not None:
                     rss.rss_episode_key = rss_key
                 if (rss_key := value.get('rss_title_key', None)) is not None:
