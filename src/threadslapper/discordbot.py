@@ -12,7 +12,8 @@ cogs_list = [
     'RssWatcher',
 ]
 
-bot = Bot(intents=Intents(members=True, guilds=True, message_content=True, messages=True, guild_messages=True))
+# bot = Bot(intents=Intents(members=True, guilds=True, message_content=True, messages=True, guild_messages=True))
+bot = Bot()
 for cog in cogs_list:
     bot.load_extension(f'cogs.{cog}')
 
