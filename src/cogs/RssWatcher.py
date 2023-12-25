@@ -89,6 +89,32 @@ class RssWatcher(commands.Cog):
                 else:
                     raise RuntimeError(f"{feed.title}: No episode data found! Please check RSS Feed URL")
 
+    def startup_validate(self):
+        """Check that configured channels are available"""
+        log.info("STARTUP Checking that configured channels are available.")
+        for feed in self.feeds:
+            # log.info(feed.channel_list)
+            if feed.enabled is False:
+                log.info(f'{feed.title}: Is disabled, skipping.')
+                continue
+            for index, (_announce_channel, _channel) in enumerate(
+                feed.get_channels(
+                    settings.override_announce_channel_id,
+                    settings.override_channel_id,
+                )
+            ):
+                channel = self.bot.get_channel(_channel)
+                if not channel:
+                    log.warning(f"{feed.title}-{index}: Channel (id={_channel}) not found!")
+                    continue
+                log.info(f"{feed.title}-{index}: Found channel (id={_channel}): {channel.guild.name}/{channel.name}")
+
+                announce_channel = self.bot.get_channel(_announce_channel)
+                if announce_channel:
+                    log.info(
+                        f"{feed.title}-{index}: Found announcement channel (id={_announce_channel}): {channel.guild.name}/{announce_channel.name}"
+                    )
+
     def cog_unload(self):
         self.check_rss_feed.cancel()
 

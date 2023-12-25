@@ -125,8 +125,17 @@ You can load in a yaml file that supports multiple RSS feeds:
 #   rss_image_key: image
 techpod:
   enabled: true
-  channel_id: 1140732303849570541
-  announce_channel_id: 626461718670737418
+  # channel_id: 1140732303849570541
+  # announce_channel_id: 626461718670737418
+
+  # NOTE: channel_list is a special yaml only key, this lets us specify multiple
+  # (announce) channels per RSS feed. This key takes precidence over
+  # `channel_id` and `announce_channel_id` keys.
+  channel_list:
+    - channel: 1140732303849570541
+      announce_channel: 626461718670737418
+    - channel: -1
+      announce_channel: -1
   rss_url: https://feeds.simplecast.com/qKIEAGzn
   rss_episode_key: itunes_episode
   rss_title_key: itunes_title

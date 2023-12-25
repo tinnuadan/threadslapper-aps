@@ -34,6 +34,17 @@ async def on_ready():
     try:
         rsswatcher = bot.get_cog('RssWatcher')
         if rsswatcher:
+            rsswatcher.startup_validate()
+            log.info(
+                "\n".join(
+                    [
+                        "\n",
+                        "=" * 80,
+                        f"\tBeginning main loop. Version {__version__}",
+                        "=" * 80,
+                    ]
+                )
+            )
             rsswatcher.check_rss_feed.start()
         else:
             raise RuntimeError("RssWatcher could not be loaded!")

@@ -1,8 +1,11 @@
 techpod:
   enabled: true
-  channel_id: 1140732303849570541
+  # channel_id: 1140732303849570541
+  # announce_channel_id: 626461718670737418
+  channel_list:
+    - channel: 1140732303849570541
+      announce_channel: 626461718670737418
   # subscriber_role_id: 1158149418252509184
-  announce_channel_id: 626461718670737418
   rss_url: https://feeds.simplecast.com/qKIEAGzn
   rss_episode_key: itunes_episode
   rss_title_key: itunes_title

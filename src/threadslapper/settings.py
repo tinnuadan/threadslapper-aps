@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from typing import Annotated, Any, Iterator, Tuple
+from typing import Annotated, Any, Iterator, Literal, Tuple
 
 import yaml
 from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, SecretStr
@@ -67,6 +67,12 @@ def prevalidate_blank_string(v: Any) -> int | None:
     return None
 
 
+def validate_channel_list(v: list[dict[str, int]]) -> list[dict[str, int]]:
+    for el in v:
+        assert list(el.keys()) == ["channel", "announce_channel"]
+    return v
+
+
 class RssFeedToChannel(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     error_count: Annotated[int, AfterValidator(validate_nonnegative)] = 0  # this is set by the script
@@ -77,7 +83,7 @@ class RssFeedToChannel(BaseModel):
     channel_id: Annotated[int, AfterValidator(validate_channel_id)] = -1
     subscriber_role_id: int | None = None
     announce_channel_id: Annotated[int, AfterValidator(validate_channel_id)] = -1
-    hybrid_channel_list: list[tuple[int, int]] = []
+    channel_list: Annotated[list[dict[str, int]], AfterValidator(validate_channel_list)] = []
     rss_feed: Annotated[str, AfterValidator(validate_string), AfterValidator(validate_rss_feed)] = ""
     color_theme_r: Annotated[int, AfterValidator(validate_color)] = 0
     color_theme_g: Annotated[int, AfterValidator(validate_color)] = 0
@@ -119,14 +125,13 @@ class RssFeedToChannel(BaseModel):
         self,
         override_announce_channel_id: int | None = None,
         override_channel_id: int | None = None,
-    ) -> Iterator[Tuple[int, int]]:
+    ) -> list[Tuple[int, int]]:
         if override_announce_channel_id or override_channel_id:
-            yield (override_announce_channel_id or -1, override_channel_id or -1)
-        elif self.hybrid_channel_list:
-            for channel in self.hybrid_channel_list:
-                yield (channel[0], channel[1])
+            return [(override_announce_channel_id or -1, override_channel_id or -1)]
+        elif self.channel_list:
+            return [(channel.get("announce_channel", -1), channel.get("channel", -1)) for channel in self.channel_list]
         else:
-            yield (self.announce_channel_id, self.channel_id)
+            return [(self.announce_channel_id, self.channel_id)]
 
 
 class Settings(BaseSettings):
@@ -264,6 +269,9 @@ class Settings(BaseSettings):
 
                 if (rss_key := value.get('rss_feed_is_backwards', None)) is not None:
                     rss.rss_feed_is_backwards = rss_key
+
+                if (rss_key := value.get('channel_list', None)) is not None:
+                    rss.channel_list = rss_key
 
                 feeds.append(rss)
         except Exception as e:
