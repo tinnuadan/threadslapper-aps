@@ -4,6 +4,7 @@ RssWatcher,
 Watches RSS feeds for new episodes then posts a discord message/thread/post.
 """
 
+import traceback
 from datetime import datetime
 from typing import Any
 
@@ -326,7 +327,7 @@ class RssWatcher(commands.Cog):
                         announce_channel = self.bot.get_channel(_announce_channel)
                         if announce_channel:
                             log.info(
-                                f"{feed.title}-{index}: Found channel (id={_announce_channel}): {announce_channel.name}"
+                                f"{feed.title}-{index}: Found channel (id={_announce_channel}): {channel.guild.name}/{announce_channel.name}"
                             )
 
                         if isinstance(channel, TextChannel):
@@ -370,7 +371,7 @@ class RssWatcher(commands.Cog):
             except Exception as e:
                 feed.error_count += 1
                 log.critical(f'{feed.title}: {e}')
-                log.error(f'{feed.title}: {e.with_traceback(None)}')
+                log.error(traceback.format_exc())
 
 
 def setup(bot: Bot):
