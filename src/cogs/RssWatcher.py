@@ -221,10 +221,10 @@ class RssWatcher(commands.Cog):
                 reason=f"{feed_title}: New Episode ({latest_episode_number}) detected, creating thread: {title}",
             )
             await new_thread.join()
-            if (message := new_thread.starting_message) is not None:
-                await message.publish()
-            if (first_msg_in_thread := new_thread.starting_message) is not None:
-                await first_msg_in_thread.pin()
+            # if (message := new_thread.starting_message) is not None:
+            #     await message.publish()
+            # if (first_msg_in_thread := new_thread.starting_message) is not None:
+            #     await first_msg_in_thread.pin()
 
             log.info(f"{feed_title}: Channel '{channel.guild.name}/{title}' created!")
             return new_thread
