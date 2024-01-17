@@ -13,6 +13,7 @@ from discord import Bot, ChannelType, Color, Embed, ForumChannel, TextChannel, T
 from discord.ext import commands, tasks
 from markdownify import markdownify as md
 from pydantic import BaseModel
+import re
 
 from threadslapper.settings import RssFeedToChannel, Settings
 
@@ -59,7 +60,7 @@ class EpisodeData(ChannelData):
         """
         if override_ep_number:
             return self.title.strip()
-        if self.title.startswith(f"{self.number}"):
+        if re.match("0*"+f"{self.number}", self.title):
             return f"{prefix} {self.title}".strip()
         return f"{prefix} {self.number}: {self.title}".strip()
 
