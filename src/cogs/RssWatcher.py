@@ -152,7 +152,10 @@ class RssWatcher(commands.Cog):
         channel_info = self._get_channel_info(rss, data.get('feed', {}))
         latest_episode = data.get('entries', [])[rss.get_latest_episode_index_position()]
 
-        latest_ep_id = latest_episode.get(rss.rss_episode_key, 0)
+        # Special handling for APS
+        title=latest_episode.get(rss.rss_title_key, "None")
+        latest_ep_id = int(title[0:3])
+
         if rss.override_episode_numbers:
             latest_ep_id = len(data.get('entries', []))
 
